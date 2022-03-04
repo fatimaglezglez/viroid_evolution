@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,11 +13,7 @@
 #include <ViennaRNA/RNAstruct.h>
 #include <ViennaRNA/stringdist.h>
 
-
-// NO HAY MOTIFS EN FITNESS - LEER
-// qué son los unclassified de table 1?
-// USE FREE()
-// compute haripnins - h
+// this project could be improved adding motifs to fitness calculation and better couniting hairpins in structure. 
 
 double rand_uni();
 long factorial(int n);
@@ -29,7 +23,7 @@ int main ()
 {
   printf(">temporal_data: h, p, gc, L\n");
   /* definition of storage arrays */
-  int N = 20; // Number of sequences // CHANGE HERE  // más de 100 me da segmentation fault
+  int N = 20; // Number of sequences // CHANGE HERE  
   int L = 500;
   char Nseq[N][L];
   int Nlen[N];
@@ -41,8 +35,8 @@ int main ()
   double Nfitness[N];
 
   /* definition of selective pressures and conditions */
-  float a = 2; // alfa: selección por energía (2)
-  float b = 2; // beta: selección por pares de bases (1)
+  float a = 2; // alpha: energy selction (2)
+  float b = 2; // beta: base pair selection (1)
   float mfe_0 = -4.333; // reference energy value
   double mutations = 3.3e-3;
   double insertions = 3.3e-3;
@@ -54,7 +48,7 @@ int main ()
   int n;
   for (int n=0; n<N; n++)
   {
-      //srand (n*33); // SEED VALUE //  QUITAR CUANDO ESTÉ LISTO
+      //srand (n*33); // SEED VALUE //  (not necessary)
       for (int i=0; i<30; i++)
       {
           int ri = rand_uni()*4;
@@ -104,7 +98,9 @@ int main ()
           /* fitness */
           double fit = exp(-a*mfe * (1 - mfe/(2*mfe_0)) + b*p);
           Nfitness[n] = fit;
-          /*** replication ***/ // revisar para no repetir en secuencias iguales o de la misma clase
+          /*** replication ***/ // revisar para no repetir en secuencias iguales o de la misma clase 
+          // REVIEW IF THIS STEP IS NECESSARY!!! (2022)
+        
          /*printf("Sequence:\t %s\nLength:\t\t %u\nStructure:\t %s\nMFE:\t\t%6.2f\nPairs:\t\t %u\nG-C content:\t %.3f\nFitness:\t %f\n",
                Nseq[n], Nlen[n], structure, mfe, p, ppGC, fit);*/
           }
@@ -133,12 +129,12 @@ int main ()
            Nhairpins[n] = h;
 
 
-              /*{  // empieza por .
+              /*{  // starts with .
                 char* pos3 = strstr(result, targetp3);
                 char* pos2 = strstr(result, targetp2);
-                if (pos3 - str == 0) {h += 1;} // empieza por ...
-                else if (pos2 - str == Nlen[n] - 2) {h += 1;} // termina por ..
-                else if ((pos2 - str == 0) && ()) {h += 1;} // termina por ..
+                if (pos3 - str == 0) {h += 1;} // starts with ...
+                else if (pos2 - str == Nlen[n] - 2) {h += 1;} // ends with ..
+                else if ((pos2 - str == 0) && ()) {h += 1;} // ends with ..
               pos = strstr(result, targetp3);
               else if(pos - str == Nlen[n] - 3) {h += 1;}
                 }
@@ -151,7 +147,7 @@ int main ()
       double P_replication[N];
       double P_distributed[N];
       double sum_fit = 0;
-      for (n=0; n<N; n++) // this is not optimal!
+      for (n=0; n<N; n++) // this is not optimal!!!! // REVIEW (2022)
       {sum_fit += Nfitness[n];}
       for (n=0; n<N; n++)
       {
@@ -164,7 +160,7 @@ int main ()
       char Nseq_2[N][L];
       for (n=0; n<N; n++)
       {Nseq_2[n][0] = '0';}
-      //srand(t*44); // REVISAR
+      //srand(t*44); // REVIEW!! (2022)
       double r;
       int count[n];
       for (n=0; n<N; n++)
@@ -173,7 +169,7 @@ int main ()
       for (int rr=0; rr<N; rr++)
       {
         r = rand_uni();
-        for (n=0; n<N; n++) // optimizar // pensar en agrupar en clases (misma seq)
+        for (n=0; n<N; n++) // needs optimisation // pensar en agrupar en clases (misma seq) // REVIEW!! (2022)
         {
           if ((n==0 || P_distributed[n-1] <= r) && (r < P_distributed[n])) // excluyo r = 1 :(
           {
@@ -219,11 +215,11 @@ int main ()
         {
           for (int k=0; k<k1; k++)
           {
-            int r_mut = rand_uni()*Nlen[n]; // posición para la mutación
+            int r_mut = rand_uni()*Nlen[n]; // position for mutation
             _Bool different = true;
             while (different)
             {
-              int ri1 = rand_uni()*4; // posicion en "bases" para sustituir
+              int ri1 = rand_uni()*4; // position in "bases" to substitute
               char mut = bases[ri1];
               if (Nseq[n][r_mut] != mut)
               {Nseq[n][r_mut] = mut; different = false;}
@@ -257,7 +253,7 @@ int main ()
             int ri2 = rand_uni()*4;
             //printf ("%u\t%c\n", ri2, bases[ri2]);
             temp_seq[r_ins] = bases[ri2];
-            for (int l=r_ins+1; l<=L; l++) // dejamos que llegue a L porque tiene que haber un nt más
+            for (int l=r_ins+1; l<=L; l++) // we allow it to reach L because we need one extra nt 
             {temp_seq[l] = Nseq[n][l-1];}
             strncpy(Nseq[n], temp_seq, sizeof(Nseq[n]) - 1);
           }
@@ -285,7 +281,7 @@ int main ()
             char temp_seq[L];
             for (int l=0; l<r_del; l++)
             {temp_seq[l] = Nseq[n][l];}
-            for (int l=r_del; l<L; l++) // dejamos que llegue a L porque tiene que haber un nt más
+            for (int l=r_del; l<L; l++) // we allow it to reach L because we need one extra nt 
             {temp_seq[l] = Nseq[n][l+1];}
             strncpy(Nseq[n], temp_seq, sizeof(Nseq[n]) - 1);
           }
